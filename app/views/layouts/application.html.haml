@@ -86,7 +86,8 @@
 								%li.navbar-form
 									= switch_user_select 
 									:coffeescript
-										$(document).ready -> 
+										$(document).ready ->
+											$("#switch_user_identifier").val('user_#{current_user.id}');
 											$("#switch_user_identifier").addClass("form-control").css("width","200px")
 											$("#remember_user").addClass("switch-mini");
 											$("#remember_user").bootstrapSwitch();
