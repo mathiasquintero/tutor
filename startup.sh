@@ -15,6 +15,7 @@ chown -R user: /usr/local/rvm/
 chmod 755 /src/sudoscript
 
 # start postfix
+rm -rf /var/spool/postfix/private/
 rm -rf /var/spool/postfix/public/
 /etc/init.d/postfix restart
 
