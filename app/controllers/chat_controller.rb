@@ -1,4 +1,6 @@
 class ChatController < ApplicationController
+  skip_before_action :verify_authenticity_token
+
   def index
   	@messages = ChatMessage.where(:room => params[:room])
   end

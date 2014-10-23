@@ -6,6 +6,18 @@ class Student < ActiveRecord::Base
 	def name
 		"#{lastname}, #{firstname}"
 	end
+	
+	def total_proper(course, limit=Time.now)
+		max = -100
+		Student.find(:all, :conditions => ['matrnr = ?', matrnr]).each do |s|
+			value = s.total(course, limit)
+			if value > max
+				max = value
+			end
+		end
+
+		max
+	end
 
 	def total(course, limit=Time.now)
 		groups = course.groups
