@@ -16,6 +16,9 @@
       @
       #{select :group, :hour, Group::HOURS} : #{select :group, :minute, Group::MINUTES}
   .form-group
+    = f.label :room, "Room"
+    = f.text_field :room, :class => "form-control"
+  .form-group
     = f.label :user_id, "Tutor for Group"
     = f.collection_select :user_id, User.all, :id, :name, {include_blank: "Unassigned"}, { :class => "form-control" } 
   .form-group
