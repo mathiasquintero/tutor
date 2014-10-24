@@ -14,7 +14,7 @@ class TutorialController < ApplicationController
 		@week = Week.find(params["week_id"])
 
 		# Find requested groups
-		groups = []		
+		groups = []
 		if params["mode"] == "all"
 			groups = @group.user.groups.where(:course => @group.course)
 		else
@@ -30,9 +30,9 @@ class TutorialController < ApplicationController
 		@students.uniq!
 
 		ActionMailer::Base.mail(
-			:from => current_user.email, 
-			:to => current_user.email, 
-			:bcc => @students.map { |s| s.email }, 
+			:from => current_user.email,
+			:to => current_user.email,
+			:bcc => @students.map { |s| s.email },
 			:subject => "[" + @group.course.name + "] " + params["subject"],
 			:body => params["body"]
 		).deliver
@@ -89,14 +89,14 @@ class TutorialController < ApplicationController
 	end
 
 	def search
-		@results = Student.where("(firstname||' '||lastname||' '||matrnr) like ?", "%#{params['term']}%").to_a
-		# @group = Group.find(params["group_id"])
-		# @results=[]
-		# @group.course.groups.each do |g| 
-		# 	g.students.where("(firstname||' '||lastname||' '||matrnr) like ?", "%#{params['term']}%").each do |s|
-		# 		@results << s
-		# 	end
-		# end
+		#@results = Student.where("(firstname||' '||lastname||' '||matrnr) like ?", "%#{params['term']}%").to_a
+		@group = Group.find(params["group_id"])
+		@results=[]
+		@group.course.groups.each do |g|
+			g.students.where("(firstname||' '||lastname||' '||matrnr) like ?", "%#{params['term']}%").each do |s|
+				@results << s
+			end
+		end
 	end
 
 	def assess
@@ -127,7 +127,7 @@ class TutorialController < ApplicationController
 			@group = Group.find(params["group_id"])
 		elsif current_user.groups.length > 0
 			dist=(Time.now - Chronic.parse('last Monday 0:00', :now => Time.now + 3600*24)).abs
-			@group = current_user.groups.to_a.min_by do |g| 
+			@group = current_user.groups.to_a.min_by do |g|
 				((Chronic.parse('last Monday 0:00', :now => g.start+3600*24) + dist) - g.start).abs + (Time.now - g.course.created_at)
 			end
 		 else
