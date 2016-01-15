@@ -1,4 +1,4 @@
-require 'csv'    
+require 'csv'
 
 class LoadController < ApplicationController
   before_filter :authenticate_user!
@@ -16,13 +16,15 @@ class LoadController < ApplicationController
       c = @course
 
       CSV.foreach(params["load"]["file"].tempfile.path, { :encoding => 'bom|utf-8', :headers => true }) do |row|
-        s = Student.create(
-          :firstname => row["Vorname"], 
-          :lastname => row["Familien- oder Nachname"], 
-          :matrnr => row["Matrikelnummer"], 
-          :email => row["E-Mail"]
-        )
-
+        s = Student.where(:matrnr => row["Matrikelnummer"].to_i).first
+        if s.present? then
+          s = Student.create(
+            :firstname => row["Vorname"],
+            :lastname => row["Familien- oder Nachname"],
+            :matrnr => row["Matrikelnummer"],
+            :email => row["E-Mail"]
+          )
+        end
         g = c.groups.where(:name => row["Gruppe"])
         if g.length == 0 then
           g = c.groups.create(:name => row["Gruppe"])
