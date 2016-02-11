@@ -17,7 +17,7 @@ class LoadController < ApplicationController
 
       CSV.foreach(params["load"]["file"].tempfile.path, { :encoding => 'bom|utf-8', :headers => true }) do |row|
         s = Student.where(:matrnr => row["Matrikelnummer"].to_i).first
-        if s.present? then
+        if not s.present? then
           s = Student.create(
             :firstname => row["Vorname"],
             :lastname => row["Familien- oder Nachname"],
