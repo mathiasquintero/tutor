@@ -6,10 +6,10 @@ class Student < ActiveRecord::Base
 	def name
 		"#{lastname}, #{firstname}"
 	end
-	
+
 	def total_proper(course, limit=Time.now)
 		max = -100
-		Student.find(:all, :conditions => ['matrnr = ?', matrnr]).each do |s|
+		Student.find(:all, :conditions => ['matrnr = ? OR (firstname = ? AND lastname = ?)', matrnr, firstname, lastname]).each do |s|
 			value = s.total(course, limit)
 			if value > max
 				max = value

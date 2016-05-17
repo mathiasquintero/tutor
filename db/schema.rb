@@ -198,6 +198,11 @@ ActiveRecord::Schema.define(version: 20140228150146) do
 
   add_index "students", ["token"], name: "index_students_on_token", unique: true
 
+  create_table "tutorial_rooms", force: true do |t|
+    t.string  "name"
+    t.integer "numseats"
+  end
+
   create_table "users", force: true do |t|
     t.datetime "created_at"
     t.datetime "updated_at"

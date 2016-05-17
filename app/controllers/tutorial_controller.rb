@@ -97,6 +97,11 @@ class TutorialController < ApplicationController
 				@results << s
 			end
 		end
+		if current_user.role == "admin"
+			Student.where("(firstname||' '||lastname||' '||matrnr) like ?", "%#{params['term']}%").each do |s|
+				@results << s
+			end
+		end
 	end
 
 	def assess
@@ -138,12 +143,15 @@ class TutorialController < ApplicationController
 		 if params["week_id"] then
 			@week = Week.find(params["week_id"])
 		 else
-			@week = @group.course.weeks.where("start <= ?", Time.now).min_by { |w| (Time.now - w.start).abs }
+			#@week = @group.course.weeks.where("start <= ?", Time.now).where("course_id",@group).min_by { |w| (Time.now - w.start).abs }
+			@week = @group.course.weeks.where("course_id",@group).min_by { |w| (Time.now - w.start).abs }
 		 end
 
 		 # Find all students
-		 @students = @group.students + Assessment.where(:group => @group, :week => @week).map { |a| a.student }
+		 @students = @group.students + Assessment.where(:group => @group, :week_id => @week).map { |a| a.student }
 		 @students.uniq!
+		 @students = @students.compact #Hack
+		 #print @students
 		 @students.sort! { |a,b| a.lastname <=> b.lastname }
 	end
 end

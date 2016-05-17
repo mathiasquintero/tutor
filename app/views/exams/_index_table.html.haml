@@ -17,7 +17,7 @@
     - exams.each do |exam|
       %tr
         %td= exam.name
-        %td= exam.start.strftime("%d.%m.%y")
+        %td= exam.start #.strftime("%d.%m.%y")
         %td= exam.students.length
         %td= exam.rooms.length
         %td 
