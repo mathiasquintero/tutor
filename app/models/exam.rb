@@ -126,7 +126,7 @@ class Exam < ActiveRecord::Base
 	def export_grades(filename)
 		export(filename) do |matrnr|
 			g = exam_grades.includes(:student).where("students.matrnr" => matrnr).first
-			[g.grade ? g.grade : "x" , g.remark]
+			[g.grade ? g.grade.to_s.gsub(/[.]/, ",") : "X" , g.remark]
 		end
 	end
 end

@@ -72,6 +72,7 @@ Tutor::Application.configure do
   # Send deprecation notices to registered listeners.
   config.active_support.deprecation = :notify
 
+  config.action_mailer.default_url_options = { :host => 'tutor.db.in.tum.de' }
   config.action_mailer.delivery_method = :sendmail
 
 #    :enable_starttls_auto => true  }
@@ -85,5 +86,5 @@ Tutor::Application.configure do
   config.middleware.use ExceptionNotifier,
     :email_prefix => "[Exception] ",
     :sender_address => %{"Exception Notifier" <kemperwebtools@gmail.com>},
-    :exception_recipients => %w{henrik.muehe@gmail.com}
+    :exception_recipients => %w{harald.lang@in.tum.de}
 end

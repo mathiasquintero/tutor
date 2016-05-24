@@ -47,6 +47,10 @@ class ExamsController < ApplicationController
     ActiveRecord::Base.transaction do
       @exam.exam_grades.destroy_all
       @exam.students.each do |s|
+#	if s.id != 2252
+#		warn "Skipping %s" %s.id
+#		next
+#	end
         ea = ExamAssessment.where(student_id: s.id, exam_id: @exam.id).first
         l = lambda.call(s,(ea.present? ? ea.total : nil))
         g = ExamGrade.create({
@@ -64,7 +68,7 @@ class ExamsController < ApplicationController
   def grade
     if params["letter"]
       l = params["letter"]
-      return render json: @exam.students.to_a.select { |student| fix(student.lastname)[0] == l }
+      return render json: @exam.students.to_a.select { |student| fix(student.lastname)[0].capitalize  == l }
         .map { |student| student.serializable_hash.select { |k,v| ["matrnr","lastname","firstname","id"].include?(k) } }
         .map { |student| 
           ea = ExamAssessment.where(student_id: student["id"], exam: @exam).first
@@ -98,6 +102,9 @@ class ExamsController < ApplicationController
 
   def extract_seat(s)
     seat = s.gsub(/^.*Reihe /, "").gsub("Platz ",":").split(":")
+    if seat.length == 0
+      seat = [ "___", "___" ]
+    end
     seat.map do |v| 
       if v.strip.match(/^[0-9]+$/)
         v.strip.to_i
@@ -129,9 +136,41 @@ class ExamsController < ApplicationController
         pdf.formatted_text [{ text: "Unterschriften #{@exam.name} - #{room.name}", styles: [:bold], size: 27 }]
         pdf.move_down 15
 
-        t = [["<b>MatrNr</b>", "<b>Lastname</b>", "<b>Firstname</b>", "<b>Row</b>", "<b>Seat</b>", "<b>Unterschrift</b>"]]
-        t+= @exam.exam_seats.includes(:student).where(room_id: room).to_a.sort_by { |a| 
-          a.split 
+        t = [["<b>MatrNr</b>", "<b>Name</b>", "<b>Vorname</b>", "<b>Reihe</b>", "<b>Sitz</b>", "<b>Unterschrift</b>"]]
+        t+= @exam.exam_seats.includes(:student).where(room_id: room).to_a.sort { |a,b| 
+	  arow = (!(a.row.is_a? Integer) && a.row.length > 3) ? " ____" : a.row
+	  brow = (!(b.row.is_a? Integer) && b.row.length > 3) ? " ____" : b.row
+          aseat = (!(a.seat.is_a? Integer) && a.seat.length > 3) ? " ____" : a.seat
+          bseat = (!(b.seat.is_a? Integer) && b.seat.length > 3) ? " ____" : b.seat   
+	  puts(arow, aseat);
+	  puts("")
+	  puts(brow, bseat);
+	  puts("----");
+	  c = 0;
+	  if ((arow.is_a? Integer) && !(brow.is_a? Integer))
+            c = 1;
+          else
+	    if (!(arow.is_a? Integer) && (brow.is_a? Integer))
+              c = -1
+            else
+              c = arow <=> brow
+            end
+	  end 
+	
+	  if (c == 0)
+
+	    if ( ((aseat.is_a? Integer) && !(bseat.is_a? Integer)) )
+	      c = 1
+            else
+	      if ( (!(aseat.is_a? Integer) && (bseat.is_a? Integer)) )
+		c = -1
+	      else
+		c = aseat <=> bseat
+	      end
+	    end
+	
+	  end
+	  c
         }.map do |seat|
           if not seat.student.present?
             [ "<font size='7'><sup>reserve</sup></font>", "", "", seat.row, seat.seat, "" ]
@@ -140,8 +179,8 @@ class ExamsController < ApplicationController
               seat.student.matrnr,
               seat.student.lastname,
               seat.student.firstname,
-              seat.row,
-              seat.seat,
+              (seat.row.to_s.length < 3) ? seat.row : "______",    
+              (seat.seat.is_a? Integer) ? seat.seat : "______",
               ""
             ]
           end
@@ -172,13 +211,14 @@ class ExamsController < ApplicationController
         pdf.move_down 15
 
         # table
-        t = [["<b>Lastname</b>", "<b>Firstname</b>", "<b>Seat</b>"]]
+        t = [["<b>Matrikelnr.</b>", "<b>Sitzplatz</b>"]]
         t+= @exam.exam_seats.includes(:student).where(["room_id = ? and student_id is not null",room.id]).sort { |a,b| 
-          [fix(a.student.lastname),fix(a.student.firstname)]<=>[fix(b.student.lastname),fix(b.student.firstname)]
+#          [fix(a.student.lastname),fix(a.student.firstname)]<=>[fix(b.student.lastname),fix(b.student.firstname)]
+	  [a.student.matrnr]<=>[b.student.matrnr]
         }.map do |seat|
-          [ seat.student.lastname,seat.student.firstname,seat.seat_string]
+          [ seat.student.matrnr, seat.seat_string]
         end
-        pdf.table t, header: true,:row_colors =>["FFFFFF","eeeeee"], :width => pdf.bounds.width, :cell_style =>{:inline_format => true }
+        pdf.table t, header: true,:row_colors =>["FFFFFF","eeeeee"], :width => pdf.bounds.width, :cell_style =>{:inline_format => true, size: 11 }
       end
 
       pdf.number_pages "<page>/<total>", {:at => [0, -3],:size => 7}

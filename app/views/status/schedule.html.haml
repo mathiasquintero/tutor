@@ -1,9 +1,20 @@
+
+
 .row
 	.col-md-12
 		%h1 Schedule for #{Course.find(params[:course_id]).name}
 .row
 	.col-md-12
 		#cal
+.row
+	.col-md-12
+		%strong Legend:
+		percentage of free seats
+		%span(style="background-color: #D8F6CE") more than 10&#37;
+		%span,&nbsp;
+		%span(style="background-color: #F7BE81") less than 10&#37;
+		%span ,&nbsp;
+		%span(style="background-color: #F5A9A9") less than 5&#37; (crowded)
 .row
 	.col-md-12(style="margin-top:30px")
 		%table.table.table-compact.table-striped
@@ -26,14 +37,17 @@
 
 :coffeescript
 	groups = #{Group.find(:all, :joins => :course, :conditions => ["courses.id = ?", params[:course_id]]).to_json(:only => [:name,:start,:room,:updated_at], :include => { :user => { :only => [ :firstname, :lastname, :email ]} })};
+	utilization = #{ActiveRecord::Base.connection.execute("select group_name,room,CAST( (100.0/num_seats)*(avg(num_attendees)) as integer) as 'util' from free_seats where course_id=5 group by course_id, course_name, group_name, room, num_seats, num_enrolled").to_json};
 	$(document).ready =>
 		events=[]
 		for group in groups
+			util = utilization.filter (x) -> x.group_name == group.name
+			util = util["0"].util
 			events.push
 				title: "\#{group.name.replace(/Gruppe /,'')}, \#{group.room}\n\#{group.user.firstname.substr(0,1)}. \#{group.user.lastname}"
 				group: group
-				start: new Date(new Date(group.start).getTime() + new Date().getTimezoneOffset() * 60000)
-				end: new Date(new Date(group.start).getTime() + new Date().getTimezoneOffset() * 60000 + 90 * 60000)
+				start: new Date(new Date(group.start).getTime() + new Date().getTimezoneOffset() * 60000 - 60*60000)
+				end: new Date(new Date(group.start).getTime() + new Date().getTimezoneOffset() * 60000 + 90 * 60000 -60*60000)
 				allDay: false
-				color: if (new Date(group.updated_at) < new Date("2013-10-25 15:41:17 +0200")) then 'red' else 'green'
+				color: if (util >= 95) then '#F5A9A9' else (if (util >= 90) then '#F7BE81' else '#D8F6CE')
 		window.buildCalendar("cal", events, (=>))
